@@ -142,7 +142,7 @@ class stream_map_sequence extends uvm_sequence#(ulss_tx);
                                 tx.sch_reg_wr_addr == 'd0; 
                                 tx.sch_reg_wr_data == 'h0;
 
-                                tx.pck_str_empty_0 == 1'b0; // -empty packet for stream 0
+                                tx.pck_str_empty_0 == 1'b1; // -empty packet for stream 0
                                 tx.in_sop_0        == 1'b0; // Start of packet
                                 tx.in_stream_0     == 64'h0;  // Packet data
                                 tx.in_eop_0        == 1'b0; // Not end of packet yet
