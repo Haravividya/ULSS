@@ -151,11 +151,12 @@ class ulss_driver extends uvm_driver #(ulss_tx);
       drive_pck_str_empty_signals(tx);
       
       // Drive each stream if it's not empty
-      for (int i = 0; i < 16; i++) begin
+     /* for (int i = 0; i < 16; i++) begin
         if (get_stream_empty(tx, i) == 1'b0) begin
           drive_stream(i, tx);
         end
-      end
+      end*/
+      drive_all_streams(tx);
     end
   endtask
   
@@ -181,7 +182,42 @@ class ulss_driver extends uvm_driver #(ulss_tx);
     // Allow two clock cycles for pck_str_empty signals to propagate
     repeat(2) @(posedge vif.rate_limiter_16to4_clk);
   endtask
+  // New task to drive all streams regardless of empty status
+task drive_all_streams(ulss_tx tx);
+  // Drive all 16 streams
+  for (int i = 0; i < 16; i++) begin
+    if (get_stream_empty(tx, i) == 1'b0) begin
+      // If stream is not empty, drive the actual data
+      drive_stream(i, tx);
+    end else begin
+      // If stream is empty, explicitly drive idle values
+      case (i)
+        0: begin vif.in_sop_0 <= 1'b0; vif.in_stream_0 <= 64'h0; vif.in_eop_0 <= 1'b0; end
+        1: begin vif.in_sop_1 <= 1'b0; vif.in_stream_1 <= 64'h0; vif.in_eop_1 <= 1'b0; end
+        2: begin vif.in_sop_2 <= 1'b0; vif.in_stream_2 <= 64'h0; vif.in_eop_2 <= 1'b0; end
+        3: begin vif.in_sop_3 <= 1'b0; vif.in_stream_3 <= 64'h0; vif.in_eop_3 <= 1'b0; end
+        4: begin vif.in_sop_4 <= 1'b0; vif.in_stream_4 <= 64'h0; vif.in_eop_4 <= 1'b0; end
+        5: begin vif.in_sop_5 <= 1'b0; vif.in_stream_5 <= 64'h0; vif.in_eop_5 <= 1'b0; end
+        6: begin vif.in_sop_6 <= 1'b0; vif.in_stream_6 <= 64'h0; vif.in_eop_6 <= 1'b0; end
+        7: begin vif.in_sop_7 <= 1'b0; vif.in_stream_7 <= 64'h0; vif.in_eop_7 <= 1'b0; end
+        8: begin vif.in_sop_8 <= 1'b0; vif.in_stream_8 <= 64'h0; vif.in_eop_8 <= 1'b0; end
+        9: begin vif.in_sop_9 <= 1'b0; vif.in_stream_9 <= 64'h0; vif.in_eop_9 <= 1'b0; end
+        10: begin vif.in_sop_10 <= 1'b0; vif.in_stream_10 <= 64'h0; vif.in_eop_10 <= 1'b0; end
+        11: begin vif.in_sop_11 <= 1'b0; vif.in_stream_11 <= 64'h0; vif.in_eop_11 <= 1'b0; end
+        12: begin vif.in_sop_12 <= 1'b0; vif.in_stream_12 <= 64'h0; vif.in_eop_12 <= 1'b0; end
+        13: begin vif.in_sop_13 <= 1'b0; vif.in_stream_13 <= 64'h0; vif.in_eop_13 <= 1'b0; end
+        14: begin vif.in_sop_14 <= 1'b0; vif.in_stream_14 <= 64'h0; vif.in_eop_14 <= 1'b0; end
+        15: begin vif.in_sop_15 <= 1'b0; vif.in_stream_15 <= 64'h0; vif.in_eop_15 <= 1'b0; end
+      endcase
+      
+      // Log that we're explicitly setting idle values
+      `uvm_info(get_type_name(), $sformatf("[DRV] Setting stream %0d to idle state", i), UVM_DEBUG)
+    end
+  end
   
+  // Wait for one clock cycle to ensure all values are properly latched
+  @(posedge vif.rate_limiter_16to4_clk);
+endtask
   // Helper function to get the empty status for a specific stream
   function bit get_stream_empty(ulss_tx tx, int stream_num);
     case (stream_num)
